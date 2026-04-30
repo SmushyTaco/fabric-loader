@@ -4,7 +4,7 @@ jobs:
   build:
     strategy:
       matrix:
-        java: [21, 25]
+        java: [25]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/setup-java@v3

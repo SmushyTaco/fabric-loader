@@ -60,6 +60,7 @@ sourceSets {
 		java.srcDirs = ['src/main/java', 'src/main/legacyJava']
 	}
 	java17
+	java25
 }
 
 configurations {
@@ -258,6 +259,9 @@ tasks.register('finalJar', Zip) {
 	into('META-INF/versions/17') {
 		from sourceSets.java17.output
 	}
+	into('META-INF/versions/25') {
+		from sourceSets.java25.output
+	}
 	destinationDirectory = file("build/libs")
 	archiveExtension = "jar"
 }
@@ -300,7 +304,15 @@ tasks.build.dependsOn "copyJson"
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = "UTF-8"
-	it.options.release = it.name.contains("Java17") ? 17 : 8
+	it.options.release = 8
+}
+
+tasks.named("compileJava17Java", JavaCompile) {
+	it.options.release = 17
+}
+
+tasks.named("compileJava25Java", JavaCompile) {
+	it.options.release = 25
 }
 
 javadoc {
