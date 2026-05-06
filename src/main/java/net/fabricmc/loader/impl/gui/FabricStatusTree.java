@@ -35,6 +35,7 @@ import java.util.StringJoiner;
 import java.util.function.UnaryOperator;
 
 import net.fabricmc.loader.impl.FormattedException;
+import net.fabricmc.loader.impl.gui.FabricIcons.DependencyGuiIconSource;
 
 public final class FabricStatusTree {
 	public enum FabricTreeWarningLevel {
@@ -276,53 +277,6 @@ public final class FabricStatusTree {
 			if (!iconSources.containsKey(id)) {
 				iconSources.put(id, new DependencyGuiIconSource(id, iconPath, paths, iconBytes));
 			}
-		}
-	}
-
-	public static final class DependencyGuiIconSource {
-		public final String id;
-		public final String iconPath;
-		public final List<String> paths = new ArrayList<>();
-		public final byte[] iconBytes;
-
-		public DependencyGuiIconSource(String id, String iconPath, List<String> paths, byte[] iconBytes) {
-			this.id = Objects.requireNonNull(id, "null id");
-			this.iconPath = Objects.requireNonNull(iconPath, "null iconPath");
-
-			if (paths != null) {
-				this.paths.addAll(paths);
-			}
-
-			this.iconBytes = iconBytes == null ? new byte[0] : iconBytes.clone();
-		}
-
-		DependencyGuiIconSource(DataInputStream is) throws IOException {
-			id = is.readUTF();
-			iconPath = is.readUTF();
-
-			for (int i = is.readInt(); i > 0; i--) {
-				paths.add(is.readUTF());
-			}
-
-			int iconByteCount = is.readInt();
-			iconBytes = new byte[iconByteCount];
-
-			if (iconByteCount > 0) {
-				is.readFully(iconBytes);
-			}
-		}
-
-		void writeTo(DataOutputStream os) throws IOException {
-			os.writeUTF(id);
-			os.writeUTF(iconPath);
-			os.writeInt(paths.size());
-
-			for (String path : paths) {
-				os.writeUTF(path);
-			}
-
-			os.writeInt(iconBytes.length);
-			os.write(iconBytes);
 		}
 	}
 
