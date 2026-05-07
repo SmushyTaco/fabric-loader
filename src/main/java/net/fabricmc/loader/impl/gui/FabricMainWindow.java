@@ -16,6 +16,11 @@
 
 package net.fabricmc.loader.impl.gui;
 
+import static net.fabricmc.loader.impl.gui.FabricIcons.UIIcon.ICON_CIRCLE;
+import static net.fabricmc.loader.impl.gui.FabricIcons.UIIcon.ICON_CLIPBOARD;
+import static net.fabricmc.loader.impl.gui.FabricIcons.UIIcon.ICON_DOCUMENT;
+import static net.fabricmc.loader.impl.gui.FabricIcons.UIIcon.ICON_ERROR;
+
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -42,19 +47,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -63,15 +60,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -100,8 +93,9 @@ import com.formdev.flatlaf.themes.FlatMacLightLaf;
 
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.fabricmc.loader.impl.discovery.ModCandidateImpl;
+import net.fabricmc.loader.impl.gui.FabricIcons.IconInfo;
+import net.fabricmc.loader.impl.gui.FabricIcons.IconSet;
 import net.fabricmc.loader.impl.gui.FabricStatusTree.DependencyGuiData;
-import net.fabricmc.loader.impl.gui.FabricStatusTree.DependencyGuiIconSource;
 import net.fabricmc.loader.impl.gui.FabricStatusTree.DependencyGuiDependency;
 import net.fabricmc.loader.impl.gui.FabricStatusTree.DependencyGuiMod;
 import net.fabricmc.loader.impl.gui.FabricStatusTree.DependencyGuiRequirement;
@@ -116,10 +110,6 @@ import net.fabricmc.loader.impl.util.Localization;
 import net.fabricmc.loader.impl.util.StringUtil;
 
 class FabricMainWindow {
-	static Icon missingIcon = null;
-	private static final Map<String, Icon> modIconCache = new HashMap<>();
-	private static final Map<String, Icon> uiIconCache = new HashMap<>();
-	private static Map<String, DependencyGuiIconSource> dependencyGuiIconSources = java.util.Collections.emptyMap();
 	private static JComponent suggestedChangesSection;
 
 	private static final Color ERROR = new Color(232, 65, 75);
@@ -254,7 +244,7 @@ class FabricMainWindow {
 		window.setTitle(tree.title);
 
 		try {
-			Image image = loadImage("/ui/icon/fabric_x128.png");
+			Image image = FabricIcons.loadImage("/ui/icon/fabric_x128.png");
 			window.setIconImage(image);
 			setTaskBarImage(image);
 		} catch (IOException e) {
@@ -332,7 +322,7 @@ class FabricMainWindow {
 				BorderFactory.createMatteBorder(0, 0, 1, 0, borderColor()),
 				BorderFactory.createEmptyBorder(26, PAGE_MARGIN, 26, PAGE_MARGIN)));
 
-		JLabel icon = new JLabel(loadUiIcon("/ui/icon/error_x24.png", 66, ERROR));
+		JLabel icon = new JLabel(ICON_ERROR.obtain(66, ERROR));
 		header.add(icon, BorderLayout.WEST);
 
 		JPanel text = new JPanel();
@@ -357,7 +347,6 @@ class FabricMainWindow {
 
 	private static Component createMainContent(FabricStatusTree tree) {
 		DependencyGuiData structuredData = tree.getDependencyGuiData();
-		dependencyGuiIconSources = structuredData != null ? structuredData.iconSources : java.util.Collections.emptyMap();
 
 		if (structuredData != null) {
 			DependencyUiData data = DependencyUiData.from(structuredData);
@@ -502,8 +491,8 @@ class FabricMainWindow {
 
 			JPanel left = new JPanel(new BorderLayout(14, 0));
 			left.setOpaque(false);
-			Icon modIcon = loadModIcon(issue.modId, 34);
-			left.add(createIconLabel(modIcon != null ? modIcon : loadUiIcon("/ui/icon/document_x24.png", 34, secondaryTextColor()), 44), BorderLayout.WEST);
+			Icon modIcon = FabricIcons.loadModIcon(issue.modId, 34);
+			left.add(createIconLabel(modIcon != null ? modIcon : ICON_DOCUMENT.obtain(34, secondaryTextColor()), 44), BorderLayout.WEST);
 
 			JPanel text = new JPanel();
 			text.setOpaque(false);
@@ -558,8 +547,8 @@ class FabricMainWindow {
 
 		JPanel heroLeft = new JPanel(new BorderLayout(14, 0));
 		heroLeft.setOpaque(false);
-		Icon modIcon = loadModIcon(issue.modId, 42);
-		heroLeft.add(new JLabel(modIcon != null ? modIcon : loadUiIcon("/ui/icon/document_x24.png", 42, secondaryTextColor())), BorderLayout.WEST);
+		Icon modIcon = FabricIcons.loadModIcon(issue.modId, 42);
+		heroLeft.add(new JLabel(modIcon != null ? modIcon : ICON_DOCUMENT.obtain(42, secondaryTextColor())), BorderLayout.WEST);
 
 		JPanel heroText = new JPanel();
 		heroText.setOpaque(false);
@@ -605,8 +594,8 @@ class FabricMainWindow {
 
 			JPanel left = new JPanel(new BorderLayout(14, 0));
 			left.setOpaque(false);
-			Icon requirementIcon = loadModIcon(requirement.id, 30);
-			left.add(new JLabel(requirementIcon != null ? requirementIcon : loadUiIcon("/ui/icon/document_x24.png", 30, secondaryTextColor())), BorderLayout.WEST);
+			Icon requirementIcon = FabricIcons.loadModIcon(requirement.id, 30);
+			left.add(new JLabel(requirementIcon != null ? requirementIcon : ICON_DOCUMENT.obtain(30, secondaryTextColor())), BorderLayout.WEST);
 
 			JPanel text = new JPanel();
 			text.setOpaque(false);
@@ -643,7 +632,7 @@ class FabricMainWindow {
 		badge.setOpaque(false);
 		badge.setForeground(Color.WHITE);
 		badge.setFont(deriveFontSize(badge, Font.BOLD, 15f));
-		badge.setIcon(loadUiIcon("/ui/icon/circle_x24.png", 38, ERROR));
+		badge.setIcon(ICON_CIRCLE.obtain(38, ERROR));
 		badge.setHorizontalTextPosition(SwingConstants.CENTER);
 		badge.setVerticalTextPosition(SwingConstants.CENTER);
 		badge.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
@@ -685,8 +674,8 @@ class FabricMainWindow {
 
 			JPanel left = new JPanel(new BorderLayout(14, 0));
 			left.setOpaque(false);
-			Icon dependencyIcon = loadModIcon(dependency.id, 30);
-			left.add(new JLabel(dependencyIcon != null ? dependencyIcon : loadUiIcon("/ui/icon/document_x24.png", 30, secondaryTextColor())), BorderLayout.WEST);
+			Icon dependencyIcon = FabricIcons.loadModIcon(dependency.id, 30);
+			left.add(new JLabel(dependencyIcon != null ? dependencyIcon : ICON_DOCUMENT.obtain(30, secondaryTextColor())), BorderLayout.WEST);
 
 			JLabel name = new JLabel(dependency.displayName);
 			name.setFont(deriveFont(name, Font.BOLD, 1.12f));
@@ -717,8 +706,8 @@ class FabricMainWindow {
 
 			JPanel left = new JPanel(new BorderLayout(14, 0));
 			left.setOpaque(false);
-			Icon modIcon = loadModIcon(dependant.modId, 34);
-			left.add(new JLabel(modIcon != null ? modIcon : loadUiIcon("/ui/icon/document_x24.png", 34, secondaryTextColor())), BorderLayout.WEST);
+			Icon modIcon = FabricIcons.loadModIcon(dependant.modId, 34);
+			left.add(new JLabel(modIcon != null ? modIcon : ICON_DOCUMENT.obtain(34, secondaryTextColor())), BorderLayout.WEST);
 
 			JPanel text = new JPanel();
 			text.setOpaque(false);
@@ -758,7 +747,7 @@ class FabricMainWindow {
 			RoundedPanel row = createCardPanel();
 			row.setLayout(new BorderLayout(12, 0));
 			row.setBorder(BorderFactory.createEmptyBorder(14, 18, 14, 18));
-			row.add(new JLabel(getActionIcon(action.targetId, 24)), BorderLayout.WEST);
+			row.add(new JLabel(FabricIcons.getActionIcon(action.targetId, 24)), BorderLayout.WEST);
 
 			JPanel text = new JPanel();
 			text.setOpaque(false);
@@ -784,18 +773,6 @@ class FabricMainWindow {
 
 		trimTrailingSpacer(rows);
 		return rows;
-	}
-
-	private static Icon getActionIcon(String targetId, int size) {
-		if (targetId != null && !targetId.isEmpty()) {
-			Icon icon = loadModIcon(targetId, size);
-
-			if (icon != null) {
-				return icon;
-			}
-		}
-
-		return loadUiIcon("/ui/icon/document_x24.png", size, secondaryTextColor());
 	}
 
 	private static JPanel createDetailSection(String title, String description, Component rows) {
@@ -999,7 +976,7 @@ class FabricMainWindow {
 			JButton btn = new JButton(button.text);
 
 			if (button.clipboard != null) {
-				btn.setIcon(loadUiIcon("/ui/icon/clipboard_x24.png", 18, INFO));
+				btn.setIcon(ICON_CLIPBOARD.obtain(18, INFO));
 			}
 
 			btn.addActionListener(event -> {
@@ -1069,33 +1046,6 @@ class FabricMainWindow {
 		return panel;
 	}
 
-	private static BufferedImage loadImage(String str) throws IOException {
-		return ImageIO.read(loadStream(str));
-	}
-
-	private static InputStream loadStream(String str) throws FileNotFoundException {
-		InputStream stream = FabricMainWindow.class.getResourceAsStream(str);
-
-		if (stream == null) {
-			throw new FileNotFoundException(str);
-		}
-
-		return stream;
-	}
-
-	private static void setTaskBarImage(Image image) {
-		try {
-			// TODO Remove reflection when updating past Java 8
-			Class<?> taskbarClass = Class.forName("java.awt.Taskbar");
-			Method getTaskbar = taskbarClass.getDeclaredMethod("getTaskbar");
-			Method setIconImage = taskbarClass.getDeclaredMethod("setIconImage", Image.class);
-			Object taskbar = getTaskbar.invoke(null);
-			setIconImage.invoke(taskbar, image);
-		} catch (Exception e) {
-			// Ignored
-		}
-	}
-
 	private static Font defaultFont() {
 		Font font = UIManager.getFont("Label.font");
 		return font != null ? font : new Font(Font.DIALOG, Font.PLAIN, 12);
@@ -1124,32 +1074,32 @@ class FabricMainWindow {
 		return text.contains("incompatible") && text.contains("mod");
 	}
 
-	private static Color backgroundColor() {
+	static Color backgroundColor() {
 		Color color = UIManager.getColor("Panel.background");
 		return color == null ? Color.WHITE : color;
 	}
 
-	private static Color cardColor() {
+	static Color cardColor() {
 		Color color = UIManager.getColor("TextField.background");
 		return color == null ? backgroundColor() : color;
 	}
 
-	private static Color borderColor() {
+	static Color borderColor() {
 		Color color = UIManager.getColor("Component.borderColor");
 		return color == null ? new Color(210, 214, 220) : color;
 	}
 
-	private static Color secondaryTextColor() {
+	static Color secondaryTextColor() {
 		Color color = UIManager.getColor("Label.disabledForeground");
 		return color == null ? new Color(105, 110, 118) : color;
 	}
 
-	private static Color accentColor() {
+	static Color accentColor() {
 		Color color = UIManager.getColor("Component.focusColor");
 		return color == null ? INFO : color;
 	}
 
-	private static Color darkerColor(Color color, float multiplier) {
+	static Color darkerColor(Color color, float multiplier) {
 		return new Color(
 				Math.max(0, Math.round(color.getRed() * multiplier)),
 				Math.max(0, Math.round(color.getGreen() * multiplier)),
@@ -1186,121 +1136,6 @@ class FabricMainWindow {
 		return conflict ? Localization.format("gui.dependency.conflict.version", formatted) : formatted;
 	}
 
-	private static Icon loadModIcon(String modId, int size) {
-		if (modId == null || modId.isEmpty()) {
-			return null;
-		}
-
-		String cacheKey = modId + "@" + size;
-		Icon cached = modIconCache.get(cacheKey);
-
-		if (cached != null) {
-			return cached;
-		}
-
-		Icon icon = findModIcon(modId, size);
-
-		if (icon != null) {
-			modIconCache.put(cacheKey, icon);
-		}
-
-		return icon;
-	}
-
-	private static Icon findModIcon(String modId, int size) {
-		Icon bundledIcon = loadBundledModIcon(modId, size);
-
-		if (bundledIcon != null) {
-			return bundledIcon;
-		}
-
-		DependencyGuiIconSource iconSource = dependencyGuiIconSources.get(modId);
-
-		if (iconSource != null) {
-			Icon icon = loadIconFromSerializedSource(iconSource, size);
-
-			if (icon != null) {
-				return icon;
-			}
-		}
-
-		for (ModCandidateImpl candidate : getDiscoveredModCandidates()) {
-			if (!modId.equals(candidate.getId())) {
-				continue;
-			}
-
-			Optional<String> iconPath = candidate.getMetadata().getIconPath(size);
-
-			if (!iconPath.isPresent() || !candidate.hasPath()) {
-				continue;
-			}
-
-			Icon icon = loadIconFromModPaths(candidate.getPaths(), iconPath.get(), size);
-
-			if (icon != null) {
-				return icon;
-			}
-		}
-
-		return null;
-	}
-
-	private static Icon loadBundledModIcon(String modId, int size) {
-		if ("minecraft".equals(modId)) {
-			return loadBundledIcon("/ui/icon/minecraft_x32.png", size);
-		}
-
-		if ("java".equals(modId)) {
-			return loadBundledIcon("/ui/icon/java_x32.png", size);
-		}
-
-		return null;
-	}
-
-	private static Icon loadBundledIcon(String path, int size) {
-		try {
-			BufferedImage image = loadImage(path);
-			return new ImageIcon(scaleImage(image, size));
-		} catch (IOException e) {
-			return null;
-		}
-	}
-
-	private static Icon loadUiIcon(String path, int size, Color color) {
-		String cacheKey = path + "@" + size + "@" + color.getRGB();
-		Icon cached = uiIconCache.get(cacheKey);
-
-		if (cached != null) {
-			return cached;
-		}
-
-		try {
-			BufferedImage image = tintImage(loadImage(path), color);
-			Icon icon = new ImageIcon(scaleImage(image, size));
-			uiIconCache.put(cacheKey, icon);
-			return icon;
-		} catch (IOException e) {
-			return missingIcon();
-		}
-	}
-
-	private static BufferedImage tintImage(BufferedImage image, Color color) {
-		BufferedImage tinted = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
-		int colorRgb = color.getRGB() & 0x00_FF_FF_FF;
-
-		for (int y = 0; y < image.getHeight(); y++) {
-			for (int x = 0; x < image.getWidth(); x++) {
-				int alpha = image.getRGB(x, y) >>> 24;
-
-				if (alpha != 0) {
-					tinted.setRGB(x, y, (alpha << 24) | colorRgb);
-				}
-			}
-		}
-
-		return tinted;
-	}
-
 	private static Optional<String> findModDisplayName(String modId) {
 		if (modId == null || modId.isEmpty()) {
 			return Optional.empty();
@@ -1322,7 +1157,7 @@ class FabricMainWindow {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static List<ModCandidateImpl> getDiscoveredModCandidates() {
+	static List<ModCandidateImpl> getDiscoveredModCandidates() {
 		try {
 			Field field = FabricLoaderImpl.class.getDeclaredField("modCandidates");
 			field.setAccessible(true);
@@ -1336,86 +1171,6 @@ class FabricMainWindow {
 		}
 
 		return java.util.Collections.emptyList();
-	}
-
-	private static Icon loadIconFromSerializedSource(DependencyGuiIconSource iconSource, int size) {
-		if (iconSource.iconBytes.length > 0) {
-			try {
-				BufferedImage image = ImageIO.read(new ByteArrayInputStream(iconSource.iconBytes));
-
-				if (image != null) {
-					return new ImageIcon(scaleImage(image, size));
-				}
-			} catch (IOException ignored) {
-				// Fall back to path based loading below.
-			}
-		}
-
-		List<Path> paths = new ArrayList<>();
-
-		for (String path : iconSource.paths) {
-			if (path != null && !path.isEmpty()) {
-				paths.add(java.nio.file.Paths.get(path));
-			}
-		}
-
-		return loadIconFromModPaths(paths, iconSource.iconPath, size);
-	}
-
-	private static Icon loadIconFromModPaths(List<Path> paths, String iconPath, int size) {
-		String normalizedIconPath = iconPath.replace('\\', '/');
-
-		for (Path path : paths) {
-			try {
-				BufferedImage image;
-
-				if (Files.isDirectory(path)) {
-					Path resolvedIconPath = path;
-
-					for (String part : normalizedIconPath.split("/")) {
-						if (!part.isEmpty()) {
-							resolvedIconPath = resolvedIconPath.resolve(part);
-						}
-					}
-
-					if (!Files.isRegularFile(resolvedIconPath)) {
-						continue;
-					}
-
-					image = ImageIO.read(resolvedIconPath.toFile());
-				} else {
-					try (ZipFile zip = new ZipFile(path.toFile())) {
-						ZipEntry entry = zip.getEntry(normalizedIconPath);
-
-						if (entry == null) {
-							continue;
-						}
-
-						try (InputStream input = zip.getInputStream(entry)) {
-							image = ImageIO.read(input);
-						}
-					}
-				}
-
-				if (image == null) {
-					continue;
-				}
-
-				return new ImageIcon(scaleImage(image, size));
-			} catch (Throwable ignored) {
-				// Invalid, missing or unreadable icons should not prevent the error UI from opening.
-			}
-		}
-
-		return null;
-	}
-
-	private static Image scaleImage(BufferedImage image, int size) {
-		if (image.getWidth() == size && image.getHeight() == size) {
-			return image;
-		}
-
-		return image.getScaledInstance(size, size, Image.SCALE_SMOOTH);
 	}
 
 	private static String html(String body) {
@@ -1752,168 +1507,6 @@ class FabricMainWindow {
 		}
 	}
 
-	static final class IconSet {
-		/** Map of IconInfo -> Integer Size -> Real Icon. */
-		private final Map<IconInfo, Map<Integer, Icon>> icons = new HashMap<>();
-
-		public Icon get(IconInfo info) {
-			// TODO: HDPI
-
-			int scale = 16;
-			Map<Integer, Icon> map = icons.computeIfAbsent(info, k -> new HashMap<>());
-
-			Icon icon = map.get(scale);
-
-			if (icon == null) {
-				try {
-					icon = loadIcon(info, scale);
-				} catch (IOException e) {
-					e.printStackTrace();
-					icon = missingIcon();
-				}
-
-				map.put(scale, icon);
-			}
-
-			return icon;
-		}
-	}
-
-	private static Icon missingIcon() {
-		if (missingIcon == null) {
-			BufferedImage img = new BufferedImage(16, 16, BufferedImage.TYPE_INT_RGB);
-
-			for (int y = 0; y < 16; y++) {
-				for (int x = 0; x < 16; x++) {
-					img.setRGB(x, y, 0xff_ff_f2);
-				}
-			}
-
-			for (int i = 0; i < 16; i++) {
-				img.setRGB(0, i, 0x22_22_22);
-				img.setRGB(15, i, 0x22_22_22);
-				img.setRGB(i, 0, 0x22_22_22);
-				img.setRGB(i, 15, 0x22_22_22);
-			}
-
-			for (int i = 3; i < 13; i++) {
-				img.setRGB(i, i, 0x9b_00_00);
-				img.setRGB(i, 16 - i, 0x9b_00_00);
-			}
-
-			missingIcon = new ImageIcon(img);
-		}
-
-		return missingIcon;
-	}
-
-	private static Icon loadIcon(IconInfo info, int scale) throws IOException {
-		BufferedImage img = new BufferedImage(scale, scale, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D imgG2d = img.createGraphics();
-
-		BufferedImage main = loadImage("/ui/icon/" + info.mainPath + "_x" + scale + ".png");
-		assert main.getWidth() == scale;
-		assert main.getHeight() == scale;
-		imgG2d.drawImage(main, null, 0, 0);
-
-		final int[][] coords = { { 0, 8 }, { 8, 8 }, { 8, 0 } };
-
-		for (int i = 0; i < info.decor.length; i++) {
-			String decor = info.decor[i];
-
-			if (decor == null) {
-				continue;
-			}
-
-			BufferedImage decorImg = loadImage("/ui/icon/decoration/" + decor + "_x" + (scale / 2) + ".png");
-			assert decorImg.getWidth() == scale / 2;
-			assert decorImg.getHeight() == scale / 2;
-			imgG2d.drawImage(decorImg, null, coords[i][0], coords[i][1]);
-		}
-
-		return new ImageIcon(img);
-	}
-
-	static final class IconInfo {
-		public final String mainPath;
-		public final String[] decor;
-		private final int hash;
-
-		IconInfo(String mainPath) {
-			this.mainPath = mainPath;
-			this.decor = new String[0];
-			hash = mainPath.hashCode();
-		}
-
-		IconInfo(String mainPath, String[] decor) {
-			this.mainPath = mainPath;
-			this.decor = decor;
-			assert decor.length < 4 : "Cannot fit more than 3 decorations into an image (and leave space for the background)";
-
-			if (decor.length == 0) {
-				// To mirror the no-decor constructor
-				hash = mainPath.hashCode();
-			} else {
-				hash = mainPath.hashCode() * 31 + Arrays.hashCode(decor);
-			}
-		}
-
-		public static IconInfo fromNode(FabricStatusNode node) {
-			String[] split = node.iconType.split("\\+");
-
-			if (split.length == 1 && split[0].isEmpty()) {
-				split = new String[0];
-			}
-
-			final String main;
-			List<String> decors = new ArrayList<>();
-			FabricTreeWarningLevel warnLevel = node.getMaximumWarningLevel();
-
-			if (split.length == 0) {
-				// Empty string, but we might replace it with a warning
-				if (warnLevel == FabricTreeWarningLevel.NONE) {
-					main = "missing";
-				} else {
-					main = "level_" + warnLevel.lowerCaseName;
-				}
-			} else {
-				main = split[0];
-
-				if (warnLevel == FabricTreeWarningLevel.NONE) {
-					// Just to add a gap
-					decors.add(null);
-				} else {
-					decors.add("level_" + warnLevel.lowerCaseName);
-				}
-
-				for (int i = 1; i < split.length && i < 3; i++) {
-					decors.add(split[i]);
-				}
-			}
-
-			return new IconInfo(main, decors.toArray(new String[0]));
-		}
-
-		@Override
-		public int hashCode() {
-			return hash;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj == this) {
-				return true;
-			}
-
-			if (obj == null || obj.getClass() != getClass()) {
-				return false;
-			}
-
-			IconInfo other = (IconInfo) obj;
-			return mainPath.equals(other.mainPath) && Arrays.equals(decor, other.decor);
-		}
-	}
-
 	private static final class CustomTreeCellRenderer extends DefaultTreeCellRenderer {
 		private static final long serialVersionUID = -5621219150752332739L;
 
@@ -1957,6 +1550,19 @@ class FabricMainWindow {
 				.replace("\n", "<br>");
 
 		return "<html>" + str + "</html>";
+	}
+
+	private static void setTaskBarImage(Image image) {
+		try {
+			// TODO Remove reflection when updating past Java 8
+			Class<?> taskbarClass = Class.forName("java.awt.Taskbar");
+			Method getTaskbar = taskbarClass.getDeclaredMethod("getTaskbar");
+			Method setIconImage = taskbarClass.getDeclaredMethod("setIconImage", Image.class);
+			Object taskbar = getTaskbar.invoke(null);
+			setIconImage.invoke(taskbar, image);
+		} catch (Exception | LinkageError e) {
+			// Ignored
+		}
 	}
 
 	static class CustomTreeNode implements TreeNode {
